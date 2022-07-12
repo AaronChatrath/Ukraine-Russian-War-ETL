@@ -5,24 +5,23 @@ from mysql.connector import errorcode
 import sys
 import pandas as pd
 
+#configuration used for the create_database(), used to connect to MYSQL
 initialisionconfig = {
     'host': 'localhost',
     'user': 'root',
     'passwd': 'your-password'
 }
 
+#configuration used to connect to MYSQL database in methods after the create_database()
 config = {
     'host': 'localhost',
     'user': 'root',
     'passwd': 'your-password',
-    'database': 'RUSUKRWAR'
+    'database': 'your-db-name'
 }
-
+# Initialising our connection, creating db from passed argument.
+# Throwing an error if neccessary and always closing connection.
 def create_database(database_name):
-    '''
-    Initialising our connection, creating db from passed argument.
-    Throwing an error if neccessary and always closing connection.
-    '''
 
     cnx = None
     try:
@@ -38,6 +37,7 @@ def create_database(database_name):
             cnx.close()
 
 
+#Creating table structures for MYSQL database
 def create_tables():
     TABLES = {}
 
@@ -78,6 +78,7 @@ def create_tables():
     cnx = mysql.connector.connect(**config)
     mycursor = cnx.cursor() 
 
+    #passing the table formats to MYSQL to create tables.
     for table_name in TABLES:
         table_description = TABLES[table_name]
         try:
@@ -93,6 +94,7 @@ def create_tables():
     mycursor.close()
     cnx.close()
 
+#template for inserting the values from the dataframe into the created tables
 def insert_data(pers_per_day_df, eq_per_day_df, cumulative_df):
     cnx = None
     add_pers_per_day_data = ("INSERT INTO personnel_losses (date, personnel_per_day) VALUES (%s,%s)")
@@ -103,12 +105,25 @@ def insert_data(pers_per_day_df, eq_per_day_df, cumulative_df):
             cnx = mysql.connector.connect(**config)
             mycursor = cnx.cursor() 
 
+            # for i, row in pers_per_day_df.iterrows():
+            #     mycursor.execute(add_pers_per_day_data, list(row))
+            # cnx.commit()
+            # for i, row in eq_per_day_df.iterrows():
+            #     mycursor.execute(add_eq_per_day_data, list(row))
+            # cnx.commit()
+            # for i, row in cumulative_df.iterrows():
+            #     mycursor.execute(add_cumulative_data, list(row))
+
+
+            #iterating through each dataframe and inputting each row into the table
             for row in pers_per_day_df.rdd.collect():
                 mycursor.execute(add_pers_per_day_data, list(row))
             for row in eq_per_day_df.rdd.collect():
                 mycursor.execute(add_eq_per_day_data, list(row))
             for row in cumulative_df.rdd.collect():
                 mycursor.execute(add_cumulative_data, list(row))
+            
+            #commit all the changes made
             cnx.commit()
     except mysql.connector.Error as e:
             print("Error %d %s" % (e.args[0], e.args[1]))

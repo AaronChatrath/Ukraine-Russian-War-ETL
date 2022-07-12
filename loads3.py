@@ -1,8 +1,8 @@
 from pyspark.sql import SparkSession
 
+#Create a dataframe from the csv filled
 def load_s3_data(path, sp):
-    """Create a dataframe from the csv filled"""
-
+    
     args = {
         'path': path,
         'header': 'True',
